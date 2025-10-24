@@ -38,13 +38,11 @@ class TourForm
                                             ->maxLength(255)
                                             ->unique(ignoreRecord: true),
 
-                                        RichEditor::make('description')
+                                        RichEditor::make('overview')
+                                            ->label('Tour Overview')
                                             ->required()
-                                            ->columnSpanFull(),
-
-                                        Textarea::make('overview')
-                                            ->rows(4)
-                                            ->columnSpanFull(),
+                                            ->columnSpanFull()
+                                            ->helperText('Full description of the tour including highlights and what to expect'),
                                     ])->columns(2),
                             ]),
 
@@ -106,12 +104,16 @@ class TourForm
                                     ->schema([
                                         FileUpload::make('featured_image')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('tours/featured')
+                                            ->visibility('public')
                                             ->maxSize(5120),
 
                                         FileUpload::make('gallery')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('tours/gallery')
+                                            ->visibility('public')
                                             ->multiple()
                                             ->maxFiles(20)
                                             ->reorderable()
@@ -211,7 +213,9 @@ class TourForm
 
                                         FileUpload::make('og_image')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('tours/og-images')
+                                            ->visibility('public')
                                             ->maxSize(2048)
                                             ->helperText('Recommended: 1200x630px for best social media display'),
                                     ])->columns(1),

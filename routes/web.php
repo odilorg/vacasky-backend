@@ -17,21 +17,15 @@ Route::get('/home-v3', function () {
 
 // Tour Routes
 Route::prefix('tours')->name('tours.')->group(function () {
-    Route::get('/', function () {
-        return view('pages.tours.grid');
-    })->name('index');
+    Route::get('/', [App\Http\Controllers\TourController::class, 'index'])->name('index');
 
     Route::get('/list', function () {
         return view('pages.tours.list');
     })->name('list');
 
-    Route::get('/{slug}', function () {
-        return view('pages.tours.details');
-    })->name('details');
+    Route::get('/{slug}', [App\Http\Controllers\TourController::class, 'show'])->name('details');
 
-    Route::get('/{slug}/booking', function () {
-        return view('pages.tours.booking');
-    })->name('booking');
+    Route::get('/{slug}/booking', [App\Http\Controllers\TourController::class, 'booking'])->name('booking');
 });
 
 // Destination Routes

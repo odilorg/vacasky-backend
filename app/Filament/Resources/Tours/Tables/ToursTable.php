@@ -7,8 +7,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ViewAction;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -101,12 +99,6 @@ class ToursTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                Action::make('view')
-                    ->label('View Tour')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn ($record) => route('tours.details', $record->slug))
-                    ->openUrlInNewTab()
-                    ->color('info'),
                 EditAction::make(),
             ])
             ->toolbarActions([

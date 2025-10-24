@@ -2,19 +2,19 @@
 
 {{-- SEO Meta Tags --}}
 @section('title')
-Bay & Delta Tour Package - Vietnam | Vacasky Tours
+{{ $tour->meta_title ?? $tour->name . ' | Vacasky Tours' }}
 @endsection
 
 @section('meta_description')
-Discover the stunning landscapes of Halong Bay, Vietnam. 5-day Bay & Delta Tour Package starting from $1,400. Cruise limestone karsts, explore Mekong Delta, and experience authentic Vietnamese culture.
+{{ $tour->meta_description ?? strip_tags($tour->overview) }}
 @endsection
 
 @section('meta_keywords')
-vietnam tour, halong bay tour, mekong delta tour, vietnam travel package, bay delta tour, vietnam cruise, hanoi tours, ho chi minh city tour, vietnam vacation
+{{ $tour->meta_keywords ?? 'travel, tours, vacation' }}
 @endsection
 
 @section('canonical_url')
-{{ route('tours.details', 'bay-delta-tour-vietnam') }}
+{{ route('tours.details', $tour->slug) }}
 @endsection
 
 {{-- Open Graph / Facebook --}}
@@ -23,107 +23,114 @@ product
 @endsection
 
 @section('og_title')
-Bay & Delta Tour Package - 5 Days Vietnam Adventure
+{{ $tour->meta_title ?? $tour->name }}
 @endsection
 
 @section('og_description')
-Experience the thrill of exploring Halong Bay and Mekong Delta. 5-day tour with 4-star hotels, meals, cruise activities, and English-speaking guide. Starting from $1,400.
+{{ $tour->meta_description ?? strip_tags($tour->overview) }}
 @endsection
 
 @section('og_image')
-{{ asset('vacasky/images/gallery/37.jpg') }}
+{{ $tour->og_image ? asset('storage/' . $tour->og_image) : ($tour->featured_image ? asset('storage/' . $tour->featured_image) : asset('vacasky/images/logo.png')) }}
 @endsection
 
 @section('og_url')
-{{ route('tours.details', 'bay-delta-tour-vietnam') }}
+{{ route('tours.details', $tour->slug) }}
 @endsection
 
 {{-- Twitter Card --}}
 @section('twitter_title')
-Bay & Delta Tour Package - 5 Days Vietnam Adventure
+{{ $tour->meta_title ?? $tour->name }}
 @endsection
 
 @section('twitter_description')
-Discover Halong Bay & Mekong Delta. 5-day tour from $1,400. Book now!
+{{ $tour->meta_description ?? strip_tags($tour->overview) }}
 @endsection
 
 @section('twitter_image')
-{{ asset('vacasky/images/gallery/37.jpg') }}
+{{ $tour->og_image ? asset('storage/' . $tour->og_image) : ($tour->featured_image ? asset('storage/' . $tour->featured_image) : asset('vacasky/images/logo.png')) }}
 @endsection
 
 @section('twitter_url')
-{{ route('tours.details', 'bay-delta-tour-vietnam') }}
+{{ route('tours.details', $tour->slug) }}
 @endsection
 
 {{-- Geo Tags --}}
 @section('geo_region')
-VN
+{{ $tour->geo_region ?? '' }}
 @endsection
 
 @section('geo_placename')
-Halong Bay, Vietnam
+{{ $tour->location }}
 @endsection
 
 @section('geo_position')
-20.910034;107.183640
+{{ $tour->latitude && $tour->longitude ? $tour->latitude . ';' . $tour->longitude : '' }}
 @endsection
 
 {{-- Schema.org JSON-LD for Tours --}}
 @push('styles')
 <script type="application/ld+json">
 @php
+$itineraryElements = [];
+if ($tour->itinerary) {
+    foreach ($tour->itinerary as $index => $day) {
+        $itineraryElements[] = [
+            '@type' => 'ListItem',
+            'position' => $index + 1,
+            'name' => $day['title'] ?? 'Day ' . ($index + 1)
+        ];
+    }
+}
+
 $jsonLd = [
     '@context' => 'https://schema.org',
     '@type' => 'TouristTrip',
-    'name' => 'Bay & Delta Tour Package',
-    'description' => "Discover the stunning landscapes of Halong Bay, where you'll cruise on a traditional junk boat and explore the breathtaking limestone karsts that rise from the emerald waters.",
-    'image' => asset('vacasky/images/gallery/37.jpg'),
-    'touristType' => 'Adventure Seekers, Culture Enthusiasts',
-    'itinerary' => [
-        '@type' => 'ItemList',
-        'itemListElement' => [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Hanoi City Tour'],
-            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Halong Bay Cruise'],
-            ['@type' => 'ListItem', 'position' => 3, 'name' => 'Back to Hanoi'],
-            ['@type' => 'ListItem', 'position' => 4, 'name' => 'Ho Chi Minh City'],
-            ['@type' => 'ListItem', 'position' => 5, 'name' => 'Mekong Delta Tour'],
-        ]
-    ],
+    'name' => $tour->name,
+    'description' => strip_tags($tour->overview),
+    'image' => $tour->featured_image ? asset('storage/' . $tour->featured_image) : asset('vacasky/images/logo.png'),
     'offers' => [
         '@type' => 'Offer',
-        'url' => route('tours.details', 'bay-delta-tour-vietnam'),
+        'url' => route('tours.details', $tour->slug),
         'priceCurrency' => 'USD',
-        'price' => '1400',
-        'priceValidUntil' => '2026-12-31',
-        'availability' => 'https://schema.org/InStock',
-        'validFrom' => '2025-01-01'
+        'price' => number_format($tour->price, 2, '.', ''),
+        'availability' => 'https://schema.org/InStock'
     ],
     'provider' => [
         '@type' => 'TravelAgency',
         'name' => 'Vacasky',
         'url' => route('home')
     ],
-    'duration' => 'P5D',
+    'duration' => $tour->duration,
     'location' => [
         '@type' => 'Place',
-        'name' => 'Halong Bay, Vietnam',
-        'address' => [
-            '@type' => 'PostalAddress',
-            'addressCountry' => 'VN',
-            'addressRegion' => 'Quảng Ninh Province'
-        ],
-        'geo' => [
-            '@type' => 'GeoCoordinates',
-            'latitude' => '20.910034',
-            'longitude' => '107.183640'
-        ]
-    ],
-    'aggregateRating' => [
-        '@type' => 'AggregateRating',
-        'ratingValue' => '4.8',
-        'reviewCount' => '2'
+        'name' => $tour->location,
     ]
 ];
+
+if (!empty($itineraryElements)) {
+    $jsonLd['itinerary'] = [
+        '@type' => 'ItemList',
+        'itemListElement' => $itineraryElements
+    ];
+}
+
+if ($tour->latitude && $tour->longitude) {
+    $jsonLd['location']['geo'] = [
+        '@type' => 'GeoCoordinates',
+        'latitude' => (string)$tour->latitude,
+        'longitude' => (string)$tour->longitude
+    ];
+}
+
+if ($tour->rating && $tour->review_count) {
+    $jsonLd['aggregateRating'] = [
+        '@type' => 'AggregateRating',
+        'ratingValue' => (string)$tour->rating,
+        'reviewCount' => (string)$tour->review_count
+    ];
+}
+
 echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 @endphp
 </script>
@@ -137,9 +144,9 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 			<ul class="page-breadbrumbs">
 				<li><a href="{{ route('home') }}">Home</a></li>
 				<li><a href="{{ route('tours.index') }}">tours</a></li>
-				<li>Vietnam</li>
+				<li>{{ $tour->destination ?? $tour->location }}</li>
 			</ul>
-			<h1 class="page-banner_title">BAY & DELTA TOUR PACKAGE</h1>
+			<h1 class="page-banner_title">{{ strtoupper($tour->name) }}</h1>
 		</div>
 	</section>
 	<!-- End Page Banner -->
@@ -147,58 +154,28 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 	<!-- Gallery Seven -->
 	<section class="gallery-seven">
 		<div class="outer-container">
+			@php
+				$galleryImages = [];
+				if ($tour->gallery && count($tour->gallery) > 0) {
+					$galleryImages = $tour->gallery;
+				} elseif ($tour->featured_image) {
+					// If only featured image, show it 3 times for carousel effect
+					$galleryImages = array_fill(0, 3, $tour->featured_image);
+				} else {
+					// Default images
+					$galleryImages = array_fill(0, 3, 'vacasky/images/resource/tour-default.jpg');
+				}
+			@endphp
+
 			<div class="gallery-carousel-three owl-carousel owl-theme">
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/37.jpg') }}"><img src="{{ asset('vacasky/images/gallery/37.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/38.jpg') }}"><img src="{{ asset('vacasky/images/gallery/38.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/39.jpg') }}"><img src="{{ asset('vacasky/images/gallery/39.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/40.jpg') }}"><img src="{{ asset('vacasky/images/gallery/40.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/41.jpg') }}"><img src="{{ asset('vacasky/images/gallery/41.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/37.jpg') }}"><img src="{{ asset('vacasky/images/gallery/37.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/38.jpg') }}"><img src="{{ asset('vacasky/images/gallery/38.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/39.jpg') }}"><img src="{{ asset('vacasky/images/gallery/39.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/40.jpg') }}"><img src="{{ asset('vacasky/images/gallery/40.jpg') }}" alt="" /></a>
-				</div>
-
-				<!-- Image -->
-				<div class="image">
-					<a class="lightbox-image" href="{{ asset('vacasky/images/gallery/41.jpg') }}"><img src="{{ asset('vacasky/images/gallery/41.jpg') }}" alt="" /></a>
-				</div>
-
+				@foreach($galleryImages as $image)
+					<!-- Image -->
+					<div class="image">
+						<a class="lightbox-image" href="{{ Str::startsWith($image, 'vacasky/') ? asset($image) : asset('storage/' . $image) }}">
+							<img src="{{ Str::startsWith($image, 'vacasky/') ? asset($image) : asset('storage/' . $image) }}" alt="{{ $tour->name }}" />
+						</a>
+					</div>
+				@endforeach
 			</div>
 		</div>
 	</section>
@@ -210,21 +187,21 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 			<div class="row clearfix">
 				<div class="col-lg-8 col-md-12 col-sm-12">
 					<h3>overview</h3>
-					<p>Discover the stunning landscapes of Halong Bay, where you'll cruise on a traditional junk boat and explore the breathtaking limestone karsts that rise from the emerald waters. Discover the beauty and charm of this unique region through a boat tour.</p>
+					<div>{!! $tour->overview !!}</div>
 					<div class="info_outer">
 						<div class="row clearfix">
 							<!-- Column -->
 							<div class="column col-lg-6 col-md-6 col-sm-12">
 								<ul class="tour-detail-two_list">
-									<li><span class="icon fas fa-map-marker-alt fa-fw"></span>Halong Bay, Vietnam</li>
-									<li><span class="icon fas fa-dollar-sign fa-fw"></span>Start from $1,400</li>
+									<li><span class="icon fas fa-map-marker-alt fa-fw"></span>{{ $tour->location }}</li>
+									<li><span class="icon fas fa-dollar-sign fa-fw"></span>Start from ${{ number_format($tour->price, 2) }}</li>
 								</ul>
 							</div>
 							<!-- Column -->
 							<div class="column col-lg-6 col-md-6 col-sm-12">
 								<ul class="tour-detail-two_list">
-									<li><span class="icon fas fa-clock fa-fw"></span>5 Days</li>
-									<li><span class="icon fas fa-users fa-fw"></span>50 People</li>
+									<li><span class="icon fas fa-clock fa-fw"></span>{{ $tour->duration }}</li>
+									<li><span class="icon fas fa-users fa-fw"></span>{{ $tour->max_people }} People</li>
 								</ul>
 							</div>
 						</div>
@@ -235,23 +212,26 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 							<div class="column col-lg-6 col-md-6 col-sm-12">
 								<h4>INCLUDED</h4>
 								<ul class="tour-detail-two_options">
-									<li>Accommodation in 4-star hotels</li>
-									<li>Daily breakfast & selected meals</li>
-									<li>Domestic flights & airport transfers</li>
-									<li>Halong Bay cruise with activities</li>
-									<li>Boat tour in Mekong Delta</li>
-									<li>English-speaking tour guide</li>
+									@if($tour->inclusions && count($tour->inclusions) > 0)
+										@foreach($tour->inclusions as $inclusion)
+											<li>{{ $inclusion['item'] ?? $inclusion }}</li>
+										@endforeach
+									@else
+										<li>Details to be announced</li>
+									@endif
 								</ul>
 							</div>
 							<!-- Column -->
 							<div class="column col-lg-6 col-md-6 col-sm-12">
 								<h4>NOT INCLUDED</h4>
 								<ul class="tour-detail-two_options cross">
-									<li>International flights airfare</li>
-									<li>Visa fees from home country</li>
-									<li>International travel insurance</li>
-									<li>Tips for tour guide & driver</li>
-									<li>Personal meal & expenses</li>
+									@if($tour->exclusions && count($tour->exclusions) > 0)
+										@foreach($tour->exclusions as $exclusion)
+											<li>{{ $exclusion['item'] ?? $exclusion }}</li>
+										@endforeach
+									@else
+										<li>Details to be announced</li>
+									@endif
 								</ul>
 							</div>
 						</div>
@@ -261,355 +241,96 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 					<!-- Accordion Box / Style Two -->
 					<ul class="accordion-box style-two">
 
-						<!-- Block -->
-						<li class="accordion block active-block">
-							<div class="acc-btn active"><div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div><span class="accordion_number">01</span> Hanoi City Tour</div>
-							<div class="acc-content current">
-								<div class="content">
-									<div class="image">
-										<img src="{{ asset('vacasky/images/resource/accordion.jpg') }}" alt="" />
+						@if($tour->itinerary && count($tour->itinerary) > 0)
+							@foreach($tour->itinerary as $index => $day)
+								<!-- Block -->
+								<li class="accordion block {{ $index === 0 ? 'active-block' : '' }}">
+									<div class="acc-btn {{ $index === 0 ? 'active' : '' }}">
+										<div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div>
+										<span class="accordion_number">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>
+										{{ $day['title'] ?? 'Day ' . ($index + 1) }}
 									</div>
-
-									<!-- Accordian Info Tabs -->
-									<div class="accordian-info-tabs">
-										<!-- Accordian Tabs -->
-										<div class="accordian-tabs tabs-box">
-
-											<!-- Tab Btns -->
-											<ul class="tab-btns tab-buttons clearfix">
-												<li data-tab="#prod-overview" class="tab-btn active-btn">Overview</li>
-												<li data-tab="#prod-schedule" class="tab-btn">Schedule</li>
-												<li data-tab="#prod-meals" class="tab-btn">Meals</li>
-												<li data-tab="#prod-accommodation" class="tab-btn">Accommodation</li>
-											</ul>
-
-											<!-- Tabs Container -->
-											<div class="tabs-content">
-
-												<!-- Tab / Active Tab -->
-												<div class="tab active-tab" id="prod-overview">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
+									<div class="acc-content {{ $index === 0 ? 'current' : '' }}">
+										<div class="content">
+											@if(isset($day['image']) && $day['image'])
+												<div class="image">
+													<img src="{{ asset('storage/' . $day['image']) }}" alt="{{ $day['title'] ?? 'Day ' . ($index + 1) }}" />
 												</div>
+											@endif
 
-												<!-- Tab -->
-												<div class="tab" id="prod-schedule">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
+											<!-- Accordian Info Tabs -->
+											<div class="accordian-info-tabs">
+												<!-- Accordian Tabs -->
+												<div class="accordian-tabs tabs-box">
+
+													<!-- Tab Btns -->
+													<ul class="tab-btns tab-buttons clearfix">
+														@if(isset($day['overview']) && $day['overview'])
+															<li data-tab="#day-{{ $index }}-overview" class="tab-btn active-btn">Overview</li>
+														@endif
+														@if(isset($day['schedule']) && $day['schedule'])
+															<li data-tab="#day-{{ $index }}-schedule" class="tab-btn">Schedule</li>
+														@endif
+														@if(isset($day['meals']) && $day['meals'])
+															<li data-tab="#day-{{ $index }}-meals" class="tab-btn">Meals</li>
+														@endif
+														@if(isset($day['accommodation']) && $day['accommodation'])
+															<li data-tab="#day-{{ $index }}-accommodation" class="tab-btn">Accommodation</li>
+														@endif
 													</ul>
-												</div>
 
-												<!-- Tab -->
-												<div class="tab" id="prod-meals">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-													</ul>
-												</div>
+													<!-- Tabs Container -->
+													<div class="tabs-content">
 
-												<!-- Tab -->
-												<div class="tab" id="prod-accommodation">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
+														@if(isset($day['overview']) && $day['overview'])
+															<!-- Tab / Active Tab -->
+															<div class="tab active-tab" id="day-{{ $index }}-overview">
+																<div class="accordian-description">{!! $day['overview'] !!}</div>
+															</div>
+														@endif
 
+														@if(isset($day['schedule']) && $day['schedule'])
+															<!-- Tab -->
+															<div class="tab" id="day-{{ $index }}-schedule">
+																<div class="accordian-description">{!! $day['schedule'] !!}</div>
+															</div>
+														@endif
+
+														@if(isset($day['meals']) && $day['meals'])
+															<!-- Tab -->
+															<div class="tab" id="day-{{ $index }}-meals">
+																<div class="accordian-description">{!! $day['meals'] !!}</div>
+															</div>
+														@endif
+
+														@if(isset($day['accommodation']) && $day['accommodation'])
+															<!-- Tab -->
+															<div class="tab" id="day-{{ $index }}-accommodation">
+																<div class="accordian-description">{!! $day['accommodation'] !!}</div>
+															</div>
+														@endif
+
+													</div>
+												</div>
 											</div>
+
 										</div>
 									</div>
-
+								</li>
+							@endforeach
+						@else
+							<li class="accordion block active-block">
+								<div class="acc-btn active">
+									<div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div>
+									<span class="accordion_number">01</span> Itinerary Details
 								</div>
-							</div>
-						</li>
-
-						<!-- Block -->
-						<li class="accordion block">
-							<div class="acc-btn"><div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div><span class="accordion_number">02</span> Halong Bay Cruise</div>
-							<div class="acc-content">
-								<div class="content">
-									<div class="image">
-										<img src="{{ asset('vacasky/images/resource/accordion.jpg') }}" alt="" />
+								<div class="acc-content current">
+									<div class="content">
+										<p>Detailed itinerary will be provided soon. Please contact us for more information.</p>
 									</div>
-
-									<!-- Accordian Info Tabs -->
-									<div class="accordian-info-tabs">
-										<!-- Accordian Tabs -->
-										<div class="accordian-tabs tabs-box">
-
-											<!-- Tab Btns -->
-											<ul class="tab-btns tab-buttons clearfix">
-												<li data-tab="#prod-overview1" class="tab-btn active-btn">Overview</li>
-												<li data-tab="#prod-schedule1" class="tab-btn">Schedule</li>
-												<li data-tab="#prod-meals1" class="tab-btn">Meals</li>
-												<li data-tab="#prod-accommodation1" class="tab-btn">Accommodation</li>
-											</ul>
-
-											<!-- Tabs Container -->
-											<div class="tabs-content">
-
-												<!-- Tab / Active Tab -->
-												<div class="tab active-tab" id="prod-overview1">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-schedule1">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-meals1">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-accommodation1">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-											</div>
-										</div>
-									</div>
-
 								</div>
-							</div>
-						</li>
-
-						<!-- Block -->
-						<li class="accordion block">
-							<div class="acc-btn"><div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div><span class="accordion_number">03</span> Back to Hanoi</div>
-							<div class="acc-content">
-								<div class="content">
-									<div class="image">
-										<img src="{{ asset('vacasky/images/resource/accordion.jpg') }}" alt="" />
-									</div>
-
-									<!-- Accordian Info Tabs -->
-									<div class="accordian-info-tabs">
-										<!-- Accordian Tabs -->
-										<div class="accordian-tabs tabs-box">
-
-											<!-- Tab Btns -->
-											<ul class="tab-btns tab-buttons clearfix">
-												<li data-tab="#prod-overvieww" class="tab-btn active-btn">Overview</li>
-												<li data-tab="#prod-schedulee" class="tab-btn">Schedule</li>
-												<li data-tab="#prod-mealss" class="tab-btn">Meals</li>
-												<li data-tab="#prod-accommodationn" class="tab-btn">Accommodation</li>
-											</ul>
-
-											<!-- Tabs Container -->
-											<div class="tabs-content">
-
-												<!-- Tab / Active Tab -->
-												<div class="tab active-tab" id="prod-overvieww">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-schedulee">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-mealss">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-accommodationn">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-											</div>
-										</div>
-									</div>
-
-								</div>
-							</div>
-						</li>
-
-						<!-- Block -->
-						<li class="accordion block">
-							<div class="acc-btn"><div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div><span class="accordion_number">04</span> Ho Chi Minh City</div>
-							<div class="acc-content">
-								<div class="content">
-									<div class="image">
-										<img src="{{ asset('vacasky/images/resource/accordion.jpg') }}" alt="" />
-									</div>
-
-									<!-- Accordian Info Tabs -->
-									<div class="accordian-info-tabs">
-										<!-- Accordian Tabs -->
-										<div class="accordian-tabs tabs-box">
-
-											<!-- Tab Btns -->
-											<ul class="tab-btns tab-buttons clearfix">
-												<li data-tab="#prod-overview2" class="tab-btn active-btn">Overview</li>
-												<li data-tab="#prod-schedule2" class="tab-btn">Schedule</li>
-												<li data-tab="#prod-meals2" class="tab-btn">Meals</li>
-												<li data-tab="#prod-accommodation2" class="tab-btn">Accommodation</li>
-											</ul>
-
-											<!-- Tabs Container -->
-											<div class="tabs-content">
-
-												<!-- Tab / Active Tab -->
-												<div class="tab active-tab" id="prod-overview2">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-schedule2">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-meals2">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-accommodation2">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-											</div>
-										</div>
-									</div>
-
-								</div>
-							</div>
-						</li>
-
-						<!-- Block -->
-						<li class="accordion block">
-							<div class="acc-btn"><div class="icon-outer"><span class="icon fa-solid fa-angle-down fa-fw"></span></div><span class="accordion_number">05</span> Mekong Delta Tour</div>
-							<div class="acc-content">
-								<div class="content">
-									<div class="image">
-										<img src="{{ asset('vacasky/images/resource/accordion.jpg') }}" alt="" />
-									</div>
-
-									<!-- Accordian Info Tabs -->
-									<div class="accordian-info-tabs">
-										<!-- Accordian Tabs -->
-										<div class="accordian-tabs tabs-box">
-
-											<!-- Tab Btns -->
-											<ul class="tab-btns tab-buttons clearfix">
-												<li data-tab="#prod-overview3" class="tab-btn active-btn">Overview</li>
-												<li data-tab="#prod-schedule3" class="tab-btn">Schedule</li>
-												<li data-tab="#prod-meals3" class="tab-btn">Meals</li>
-												<li data-tab="#prod-accommodation3" class="tab-btn">Accommodation</li>
-											</ul>
-
-											<!-- Tabs Container -->
-											<div class="tabs-content">
-
-												<!-- Tab / Active Tab -->
-												<div class="tab active-tab" id="prod-overview3">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-schedule3">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-meals3">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-													</ul>
-												</div>
-
-												<!-- Tab -->
-												<div class="tab" id="prod-accommodation3">
-													<ul class="accordian-list">
-														<li>Visit to Ho Chi Minh Mausoleum</li>
-														<li>One Pillar Pagoda</li>
-														<li>Temple of Literature</li>
-														<li>Water puppet show in the evening</li>
-													</ul>
-												</div>
-
-											</div>
-										</div>
-									</div>
-
-								</div>
-							</div>
-						</li>
+							</li>
+						@endif
 
 					</ul>
 
@@ -661,7 +382,7 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
 						<!-- Booking Form -->
 						<div class="booking-form">
-							<form method="post" action="{{ route('tours.booking', 'bay-delta-tour') }}">
+							<form method="post" action="{{ route('tours.booking', $tour->slug) }}">
 								@csrf
 								<!-- Form Group -->
 								<div class="form-group">
@@ -704,7 +425,7 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 									<div class="d-flex justify-content-between align-items-center">
 										<div class="total-payment">
 											Total Payment
-											<span>$ 2,200</span>
+											<span>$ {{ number_format($tour->price, 0) }}</span>
 										</div>
 										<button type="submit" class="btn-style-two theme-btn">
 											<span class="btn-wrap">

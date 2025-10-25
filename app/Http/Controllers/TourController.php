@@ -9,7 +9,7 @@ class TourController extends Controller
 {
     public function index()
     {
-        $tours = Tour::active()->latest()->get();
+        $tours = Tour::active()->latest()->paginate(12);
         return view('pages.tours.grid', compact('tours'));
     }
 

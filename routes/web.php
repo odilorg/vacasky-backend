@@ -41,13 +41,11 @@ Route::prefix('destinations')->name('destinations.')->group(function () {
 
 // Blog Routes
 Route::prefix('blog')->name('blog.')->group(function () {
-    Route::get('/', function () {
-        return view('pages.blog.index');
-    })->name('index');
-
-    Route::get('/{slug}', function () {
-        return view('pages.blog.details');
-    })->name('details');
+    Route::get('/', [App\Http\Controllers\BlogController::class, 'index'])->name('index');
+    Route::get('/category/{slug}', [App\Http\Controllers\BlogController::class, 'byCategory'])->name('category');
+    Route::get('/tag/{slug}', [App\Http\Controllers\BlogController::class, 'byTag'])->name('tag');
+    Route::get('/{slug}', [App\Http\Controllers\BlogController::class, 'show'])->name('details');
+    Route::post('/{slug}/comment', [App\Http\Controllers\BlogController::class, 'storeComment'])->name('comment.store');
 });
 
 // Static Pages

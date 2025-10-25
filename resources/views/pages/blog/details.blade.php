@@ -388,6 +388,10 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 @push('scripts')
 <style>
 /* Blog Detail Styles */
+.blog-detail-section {
+	padding: 80px 0;
+}
+
 .blog-detail {
 	margin-bottom: 50px;
 }
@@ -439,6 +443,7 @@ echo json_encode($jsonLd, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 }
 
 .blog-detail_content {
+	margin-top: 30px;
 	margin-bottom: 30px;
 	line-height: 1.8;
 	font-size: 16px;
